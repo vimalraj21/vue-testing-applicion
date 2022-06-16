@@ -1,58 +1,126 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+<v-container>
+   <v-data-table
+    :headers="dessertHeaders"
+    :items="response"
+    :single-expand="singleExpand"
+    :expanded.sync="expanded"
+    item-key="name"
+    show-expand
+    class="elevation-1"
+  >
+  <!-- eslint-disable-next-line -->
+  <template v-slot:item.birthday="{ item }">
+    {{format(item.birthday)}}
+  </template>
+  <!-- eslint-disable-next-line -->
+  <template v-slot:item.avatar="{ item }">
+    <v-avatar>
+      <img
+        :src= "`${item.avatar}`"
+        alt="John"
+      >
+    </v-avatar>
+  </template>
+  <!-- eslint-disable-next-line -->
+      <template v-slot:item.data-table-expand="{ item, isExpanded, expand }">
+        <v-icon
+          @click="
+            expand(true);
+            get_chekin(item.id);
+          "
+          v-if="!isExpanded"
+          >mdi-chevron-down</v-icon
+        >
+        <v-icon @click="expand(false)" v-if="isExpanded">mdi-chevron-up</v-icon>
+      </template>
+      <template v-slot:expanded-item="{ headers,  }">
+      <td :colspan="headers.length">
+        <v-simple-table dense>
+          <template v-slot:default>
+            <thead>
+              <tr>
+                <th class="text-left">
+                  location
+                </th>
+                <th class="text-left">
+                  purpose
+                </th>
+                <th class="text-left">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr v-for="thing in chekin" :key="thing.id">
+              <td>{{thing.location}}</td>
+              <td>{{thing.purpose}}</td>
+              <td>{{format(thing.checkin)}}</td>
+            </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
+      </td>
+      </template>
+  </v-data-table>
+</v-container>
 </template>
 
 <script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
-</script>
+import Util from "@/js/Util";
+import employees_db from "@/js/database/fetch_data";
+  export default {
+    name: 'HelloWorld',
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
+    data () {
+      return {
+        response: [],
+        chekin:[],
+        expanded: [],
+        singleExpand: true,
+        dessertHeaders: [
+          {
+            text: 'name',
+            align: 'start',
+            sortable: false,
+            value: 'name',
+          },
+          { text: 'avatar', value: 'avatar' },
+          { text: 'email', value: 'email' },
+          { text: 'phone', value: 'phone' },
+          { text: 'department', value: 'department' },
+          { text: 'birthday', value: 'birthday' },
+          { text: 'country', value: 'country' },
+          { text: '', value: 'data-table-expand' },
+        ],
+      }
+      },
+      mounted: async function () {
+        this.load();
+      },
+      methods: {
+        load:async function(){
+          this.response = await employees_db.updateScreen();
+        },
+      format(date){
+        return Util.format_date(date)
+      },
+      get_chekin:async function(id){
+        this.chekin = []
+        this.chekin =  await employees_db.getchekin(id);
+      }
+      }
+      
+  }
+</script>
+<style>
+.avatar {
+  border-radius: 30%;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
+.v-data-table > .v-data-table__wrapper > table > tbody > tr > td,
+.v-data-table > .v-data-table__wrapper > table > thead > tr > td,
+.v-data-table > .v-data-table__wrapper > table > tfoot > tr > td {
+  font-size: 12px !important;
+  font-family: Tahoma, Verdana, sans-serif;
 }
 </style>
